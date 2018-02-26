@@ -1,8 +1,8 @@
 # Webmention.io integration for Drupal
 
-## About Webmention.io
+## About
 
-Webmention.io is a hosted service created to easily handle webmentions (and legacy pingbacks) on any web page. This Drupal 8 modules exposes an endpoint (/webmention/notify) to receive pingbacks and webmentions via this service. Pingbacks are also validated to make sure that the source URL has a valid link to the target.
+Webmention.io is a hosted service created to easily handle webmentions (and legacy pingbacks) on any web page. This Drupal 8 module exposes an endpoint (/webmention/notify) to receive pingbacks and webmentions via this service. Pingbacks are also validated to make sure that the source URL has a valid link to the target.
 
 You need an account at https://webmention.io. As soon as one webmention is recorded, you can set the the webhook to http://your_domain/webmention/notify.
 
