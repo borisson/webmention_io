@@ -85,7 +85,6 @@ class WebmentionIoController extends ControllerBase {
     $valid = FALSE;
 
     $content = file_get_contents($source, $target);
-    file_put_contents('/tmp/content', $content);
     if ($content && strpos($content, $target) !== FALSE) {
       $valid = TRUE;
     }
