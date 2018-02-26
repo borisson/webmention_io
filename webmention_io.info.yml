@@ -1,0 +1,4 @@
+name: Webmention.io
+type: module
+description: Stores pingbacks and webmentions.
+core: 8.x

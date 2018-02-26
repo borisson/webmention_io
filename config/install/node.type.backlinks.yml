@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+third_party_settings: {  }
+name: Backlinks
+type: backlinks
+description: 'Stores pingbacks and webmentions received from Webmention.io.'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false
