@@ -9,7 +9,7 @@ You need an account at https://webmention.io. As soon as one webmention is recor
 ## Installation
 
 - Go to admin/modules and toggle 'Webmention IO'
-- Add the webmention header tags to html.html.twig
+- Add the webmention header tags to html.html.twig (or use hooks to only add these head tags on certain pages).
 
  ```
   <link rel="pingback" href="https://webmention.io/webmention?forward=http://your_domain/webmention/notify" />
