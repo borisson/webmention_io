@@ -12,6 +12,8 @@ class WebmentionIoController extends ControllerBase {
    * Routing callback: receive webmentions and pingbacks from Webmention.io.
    */
   public function endpoint() {
+    $valid = TRUE;
+    $needs_validation = FALSE;
 
     // Default response code and message.
     $response_code = 400;
@@ -23,8 +25,12 @@ class WebmentionIoController extends ControllerBase {
     $mention = json_decode($input, TRUE);
 
     // Check if this is a forward pingback.
-    if (empty($mention)) {
+    if (empty($mention) || !isset($mention['type'])) {
       if (!empty($_POST['source']) && !empty($_POST['target'])) {
+
+        $valid = FALSE;
+        $needs_validation = TRUE;
+
         $mention = [];
         $mention['source'] = $_POST['source'];
         $mention['post'] = [];
@@ -46,7 +52,12 @@ class WebmentionIoController extends ControllerBase {
         $this->getLogger('webmention_io')->notice('object: @object', ['@object' => print_r($mention, 1)]);
       }
 
-      if ($this->validateSource($mention['source'], $mention['target'])) {
+      // Pingback needs validation.
+      if ($needs_validation) {
+        $valid = $this->validateSource($mention['source'], $mention['target']);
+      }
+
+      if ($valid) {
 
         $response_code = 202;
         $response_message = 'Webmention was successful';
