@@ -10,7 +10,7 @@ Webmention.io is a hosted service created to easily handle webmentions (and lega
 - Add the webmention header tags to html.html.twig
 
  ```
-  <link rel="pingback" href="https://webmention.io/your_domain/xmlrpc" />
+  <link rel="pingback" href="https://webmention.io/webmention?forward=http://your_domain/webmention/notify" />
   <link rel="webmention" href="https://webmention.io/your_domain/webmention" />
   ```
 
@@ -32,4 +32,3 @@ Two settings can be configured by adding lines to settings.php
   ```
   $settings['webmention_io_uid'] = 321;
   ```
-
