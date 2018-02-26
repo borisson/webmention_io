@@ -12,25 +12,23 @@ class WebmentionIoController extends ControllerBase {
    * Routing callback: receive webmentions and pingbacks from Webmention.io.
    */
   public function endpoint() {
-    $valid = TRUE;
-    $needs_validation = FALSE;
+    $valid = FALSE;
 
     // Default response code and message.
     $response_code = 400;
     $response_message = 'Bad request';
 
     // Check if there's any input from the webhook.
+    // TODO I need to actually receive a webhook request to validate all this
+    // code, this was done by testing with a REST client.
     $input = file('php://input');
     $input = is_array($input) ? array_shift($input) : '';
     $mention = json_decode($input, TRUE);
 
-    // Check if this is a forward pingback.
-    if (empty($mention) || !isset($mention['type'])) {
-      if (!empty($_POST['source']) && !empty($_POST['target'])) {
-
-        $valid = FALSE;
-        $needs_validation = TRUE;
-
+    // Check if this is a forward pingback, which is a POST request.
+    if (empty($mention) && (!empty($_POST['source']) && !empty($_POST['target']))) {
+      if ($this->validateSource($_POST['source'], $_POST['target'])) {
+        $valid = TRUE;
         $mention = [];
         $mention['source'] = $_POST['source'];
         $mention['post'] = [];
@@ -39,45 +37,40 @@ class WebmentionIoController extends ControllerBase {
         $mention['target'] = $_POST['target'];
       }
     }
+    else {
+      $valid = TRUE;
+    }
 
     // Debug.
     if (Settings::get('webmention_io_log_payload', FALSE)) {
       $this->getLogger('webmention_io')->notice('input: @input', ['@input' => print_r($input, 1)]);
     }
 
-    if (!empty($mention)) {
+    // We have a valid mention.
+    if (!empty($mention) && $valid) {
 
       // Debug.
       if (Settings::get('webmention_io_log_payload', FALSE)) {
         $this->getLogger('webmention_io')->notice('object: @object', ['@object' => print_r($mention, 1)]);
       }
 
-      // Pingback needs validation.
-      if ($needs_validation) {
-        $valid = $this->validateSource($mention['source'], $mention['target']);
-      }
+      $response_code = 202;
+      $response_message = 'Webmention was successful';
 
-      if ($valid) {
+      $values = [
+        'title' => 'Backlink: ' . $mention['source'],
+        'type' => 'backlinks',
+        'uid' => Settings::get('webmention_io_uid', 1),
+        // Remove the base url.
+        'field_webmention_target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
+        'field_webmention_source' => ['value' => $mention['source']],
+        'field_webmention_type' => ['value' => $mention['post']['type']],
+        'field_webmention_property' => ['value' => $mention['post']['wm-property']]
+      ];
 
-        $response_code = 202;
-        $response_message = 'Webmention was successful';
-
-        $values = [
-          'title' => 'Backlink: ' . $mention['source'],
-          'type' => 'backlinks',
-          'uid' => Settings::get('webmention_io_uid', 1),
-          // Remove the base url.
-          'field_webmention_target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
-          'field_webmention_source' => ['value' => $mention['source']],
-          'field_webmention_type' => ['value' => $mention['post']['type']],
-          'field_webmention_property' => ['value' => $mention['post']['wm-property']]
-        ];
-
-        // Save the node.
-        $node = $this->entityTypeManager()->getStorage('node')->create($values);
-        $node->save();
-      }
-
+      // Save the node.
+      $node = $this->entityTypeManager()->getStorage('node')->create($values);
+      $node->save();
     }
 
     $response = ['result' => $response_message];
