@@ -35,3 +35,7 @@ Two settings can be configured by adding lines to settings.php
   ```
   $settings['webmention_io_uid'] = 321;
   ```
+
+## TODO
+
+  - Add API to get backlinks for a certain URL ? Although this could probably be done with entity queries too.
