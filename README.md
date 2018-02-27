@@ -4,7 +4,8 @@
 
 Webmention.io is a hosted service created to easily handle webmentions (and legacy pingbacks) on any web page. This Drupal 8 module exposes an endpoint (/webmention/notify) to receive pingbacks and webmentions via this service. Pingbacks are also validated to make sure that the source URL has a valid link to the target.
 
-You need an account at https://webmention.io. As soon as one webmention is recorded, you can set the the webhook to http://your_domain/webmention/notify.
+You need an account for receiving the webhooks at https://webmention.io. As soon as one webmention is recorded, you can set the the webhook to http://your_domain/webmention/notify.
+Pingbacks can be done without an account, but you probably want both right :)
 
 ## Installation
 
@@ -39,3 +40,4 @@ Two settings can be configured by adding lines to settings.php
 ## TODO
 
   - Add API to get backlinks for a certain URL ? Although this could probably be done with entity queries too.
+  - Store more data from the webmention hook (author information)
