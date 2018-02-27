@@ -39,5 +39,5 @@ Two settings can be configured by adding lines to settings.php
 
 ## TODO
 
-  - Add API to get backlinks for a certain URL ? Although this could probably be done with entity queries too.
-  - Store more data from the webmention hook (author information)
+  - Add API to get backlinks for a certain URL.
+  - Expose that data in a block.

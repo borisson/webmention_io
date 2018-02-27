@@ -30,6 +30,7 @@ class WebmentionIoController extends ControllerBase {
       if ($this->validateSource($_POST['source'], $_POST['target'])) {
         $valid = TRUE;
         $mention = [];
+        $mention['secret'] = '';
         $mention['source'] = $_POST['source'];
         $mention['post'] = [];
         $mention['post']['type'] = 'pingback';
@@ -67,6 +68,18 @@ class WebmentionIoController extends ControllerBase {
         'field_webmention_type' => ['value' => $mention['post']['type']],
         'field_webmention_property' => ['value' => $mention['post']['wm-property']]
       ];
+
+      // Secret field.
+      if (!empty($mention['secret'])) {
+        $values['field_webmention_secret'] = ['value' => $mention['secret']];
+      }
+
+      // Author info.
+      foreach (['name', 'photo', 'url'] as $key) {
+        if (!empty($mention['post']['author'][$key])) {
+          $values['field_webmention_author_' . $key] = ['value' => $mention['post']['author'][$key]];
+        }
+      }
 
       // Save the node.
       $node = $this->entityTypeManager()->getStorage('node')->create($values);
