@@ -6,7 +6,6 @@ dependencies:
     - field.field.node.backlinks.field_webmention_author_photo
     - field.field.node.backlinks.field_webmention_author_url
     - field.field.node.backlinks.field_webmention_property
-    - field.field.node.backlinks.field_webmention_secret
     - field.field.node.backlinks.field_webmention_source
     - field.field.node.backlinks.field_webmention_target
     - field.field.node.backlinks.field_webmention_type
@@ -44,14 +43,6 @@ content:
     region: content
   field_webmention_property:
     weight: 3
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    type: string
-    region: content
-  field_webmention_secret:
-    weight: 7
     label: above
     settings:
       link_to_entity: false

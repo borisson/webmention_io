@@ -41,3 +41,4 @@ Two settings can be configured by adding lines to settings.php
 
   - Add API to get backlinks for a certain URL.
   - Expose that data in a block.
+  - validate secret
