@@ -19,8 +19,6 @@ class WebmentionIoController extends ControllerBase {
     $response_message = 'Bad request';
 
     // Check if there's any input from the webhook.
-    // TODO I need to actually receive a webhook request to validate all this
-    // code, this was done by testing with a REST client.
     $input = file('php://input');
     $input = is_array($input) ? array_shift($input) : '';
     $mention = json_decode($input, TRUE);
@@ -59,26 +57,32 @@ class WebmentionIoController extends ControllerBase {
       $response_message = 'Webmention was successful';
 
       $values = [
-        'title' => 'Backlink: ' . $mention['source'],
-        'type' => 'backlinks',
-        'uid' => Settings::get('webmention_io_uid', 1),
+        'user_id' => Settings::get('webmention_io_uid', 1),
         // Remove the base url.
-        'field_webmention_target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
-        'field_webmention_source' => ['value' => $mention['source']],
-        'field_webmention_type' => ['value' => $mention['post']['type']],
-        'field_webmention_property' => ['value' => $mention['post']['wm-property']]
+        'target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
+        'source' => ['value' => $mention['source']],
+        'type' => ['value' => $mention['post']['type']],
+        'property' => ['value' => $mention['post']['wm-property']]
       ];
+
+      // Set created to published or wm-received if available.
+      if (!empty($mention['post']['wm-received'])) {
+        $values['created'] = strtotime($mention['post']['wm-received']);
+      }
+      elseif (!empty($mention['post']['published'])) {
+        $values['created'] = strtotime($mention['post']['published']);
+      }
 
       // Author info.
       foreach (['name', 'photo', 'url'] as $key) {
         if (!empty($mention['post']['author'][$key])) {
-          $values['field_webmention_author_' . $key] = ['value' => $mention['post']['author'][$key]];
+          $values['author_' . $key] = ['value' => $mention['post']['author'][$key]];
         }
       }
 
-      // Save the node.
-      $node = $this->entityTypeManager()->getStorage('node')->create($values);
-      $node->save();
+      // Save the entity.
+      $webmention = $this->entityTypeManager()->getStorage('webmention_entity')->create($values);
+      $webmention->save();
     }
 
     $response = ['result' => $response_message];
