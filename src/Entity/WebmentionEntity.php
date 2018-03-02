@@ -232,4 +232,36 @@ class WebmentionEntity extends ContentEntityBase implements WebmentionEntityInte
     return $fields;
   }
 
+  /**
+   * Create a webmention entity from already validated input.
+   *
+   * @param array $mention
+   *   The data to create the entity from.
+   *
+   * @return \Drupal\webmention_io\Entity\WebmentionEntityInterface
+   *   The newly created, unsaved entity.
+   */
+  public static function createFromArray(array $mention) : WebmentionEntityInterface {
+    $values = [
+      'source' => ['value' => $mention['source']],
+      'type' => ['value' => $mention['post']['type']],
+      'property' => ['value' => $mention['post']['wm-property']],
+    ];
+    // Set created to published or wm-received if available.
+    if (!empty($mention['post']['wm-received'])) {
+      $values['created'] = strtotime($mention['post']['wm-received']);
+    }
+    elseif (!empty($mention['post']['published'])) {
+      $values['created'] = strtotime($mention['post']['published']);
+    }
+    // Author info.
+    foreach (['name', 'photo', 'url'] as $key) {
+      if (!empty($mention['post']['author'][$key])) {
+        $values['author_' . $key] = ['value' => $mention['post']['author'][$key]];
+      }
+    }
+
+    return static::create($values);
+  }
+
 }

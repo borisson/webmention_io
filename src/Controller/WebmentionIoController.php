@@ -4,49 +4,29 @@ namespace Drupal\webmention_io\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Site\Settings;
+use Drupal\webmention_io\Entity\WebmentionEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 class WebmentionIoController extends ControllerBase {
 
   /**
    * Routing callback: receive webmentions and pingbacks from Webmention.io.
    */
-  public function endpoint() {
+  public function endpoint(Request $request) : JsonResponse {
     $valid = FALSE;
 
     // Default response code and message.
     $response_code = 400;
     $response_message = 'Bad request';
 
-    // Check if there's any input from the webhook.
-    $input = file('php://input');
-    $input = is_array($input) ? array_shift($input) : '';
-    $mention = json_decode($input, TRUE);
-
-    // Check if this is a forward pingback, which is a POST request.
-    if (empty($mention) && (!empty($_POST['source']) && !empty($_POST['target']))) {
-      if ($this->validateSource($_POST['source'], $_POST['target'])) {
-        $valid = TRUE;
-        $mention = [];
-        $mention['source'] = $_POST['source'];
-        $mention['post'] = [];
-        $mention['post']['type'] = 'pingback';
-        $mention['post']['wm-property'] = 'pingback';
-        $mention['target'] = $_POST['target'];
-      }
-    }
-    else {
-      // TODO validate secret
+    $mention = $this->generateMentionArrayFromRequest($request);
+    if (!empty($mention)) {
       $valid = TRUE;
     }
 
-    // Debug.
-    if (Settings::get('webmention_io_log_payload', FALSE)) {
-      $this->getLogger('webmention_io')->notice('input: @input', ['@input' => print_r($input, 1)]);
-    }
-
     // We have a valid mention.
-    if (!empty($mention) && $valid) {
+    if ($valid) {
 
       // Debug.
       if (Settings::get('webmention_io_log_payload', FALSE)) {
@@ -56,33 +36,17 @@ class WebmentionIoController extends ControllerBase {
       $response_code = 202;
       $response_message = 'Webmention was successful';
 
-      $values = [
-        'user_id' => Settings::get('webmention_io_uid', 1),
-        // Remove the base url.
-        'target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
-        'source' => ['value' => $mention['source']],
-        'type' => ['value' => $mention['post']['type']],
-        'property' => ['value' => $mention['post']['wm-property']]
-      ];
-
-      // Set created to published or wm-received if available.
-      if (!empty($mention['post']['wm-received'])) {
-        $values['created'] = strtotime($mention['post']['wm-received']);
-      }
-      elseif (!empty($mention['post']['published'])) {
-        $values['created'] = strtotime($mention['post']['published']);
-      }
-
-      // Author info.
-      foreach (['name', 'photo', 'url'] as $key) {
-        if (!empty($mention['post']['author'][$key])) {
-          $values['author_' . $key] = ['value' => $mention['post']['author'][$key]];
-        }
-      }
+      $mention['user_id'] = Settings::get('webmention_io_uid', 1);
+      $mention['target'] = ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])];
 
       // Save the entity.
-      $webmention = $this->entityTypeManager()->getStorage('webmention_entity')->create($values);
-      $webmention->save();
+      try {
+        $webmention = WebmentionEntity::createFromArray($mention);
+        $webmention->save();
+      }
+      catch (\Exception $exception) {
+        return new JsonResponse($exception->getMessage(), '400');
+      }
     }
 
     $response = ['result' => $response_message];
@@ -106,6 +70,40 @@ class WebmentionIoController extends ControllerBase {
     }
 
     return $valid;
+  }
+
+  /**
+   * Extracts an array valid for a mention from the request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *
+   * @return array
+   */
+  protected function generateMentionArrayFromRequest(Request $request) : array {
+    // Check if there's any input from the webhook.
+    $input = $request->getContent();
+    $input = is_array($input) ? array_shift($input) : '';
+    $mention = json_decode($input, TRUE);
+
+    // Check if this is a forward pingback, which is a POST request.
+    if (empty($mention) && ($request->request->get('source') && $request->request->get('target'))) {
+      if ($this->validateSource($_POST['source'], $_POST['target'])) {
+        $mention = [];
+        $mention['source'] = $_POST['source'];
+        $mention['post'] = [];
+        $mention['post']['type'] = 'pingback';
+        $mention['post']['wm-property'] = 'pingback';
+        $mention['target'] = $_POST['target'];
+      }
+    }
+
+    // Debug.
+    if (Settings::get('webmention_io_log_payload', FALSE)) {
+      $this->getLogger('webmention_io')
+        ->notice('input: @input', ['@input' => print_r($input, 1)]);
+    }
+
+    return $mention;
   }
 
 }
