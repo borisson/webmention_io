@@ -4,7 +4,6 @@ namespace Drupal\webmention_io;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
-use Drupal\Core\Link;
 
 /**
  * Defines a class to build a listing of Webmention entities.
@@ -35,7 +34,7 @@ class WebmentionEntityListBuilder extends EntityListBuilder {
     $row['target'] = $entity->get('target')->value;
     $row['type'] = $entity->get('type')->value;
     $row['property'] = $entity->get('property')->value;
-    $row['author'] = $entity->get('author_name')->value ?: '/' ;
+    $row['author'] = $entity->get('author_name')->value ?: '/';
     $row['created'] = \Drupal::service('date.formatter')->format($entity->getCreatedTime());
     return $row + parent::buildRow($entity);
   }

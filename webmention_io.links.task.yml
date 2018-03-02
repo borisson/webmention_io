@@ -24,4 +24,3 @@ entity.webmention_entity.delete_form:
   base_route:  entity.webmention_entity.canonical
   title: Delete
   weight: 10
-

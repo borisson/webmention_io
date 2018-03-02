@@ -6,6 +6,9 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+/**
+ * Class WebmentionIoController.
+ */
 class WebmentionIoController extends ControllerBase {
 
   /**
@@ -36,7 +39,7 @@ class WebmentionIoController extends ControllerBase {
       }
     }
     else {
-      // TODO validate secret
+      // TODO validate secret.
       $valid = TRUE;
     }
 
@@ -59,10 +62,12 @@ class WebmentionIoController extends ControllerBase {
       $values = [
         'user_id' => Settings::get('webmention_io_uid', 1),
         // Remove the base url.
-        'target' => ['value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target'])],
+        'target' => [
+          'value' => str_replace(\Drupal::request()->getSchemeAndHttpHost(), '', $mention['target']),
+        ],
         'source' => ['value' => $mention['source']],
         'type' => ['value' => $mention['post']['type']],
-        'property' => ['value' => $mention['post']['wm-property']]
+        'property' => ['value' => $mention['post']['wm-property']],
       ];
 
       // Set created to published or wm-received if available.
@@ -92,10 +97,13 @@ class WebmentionIoController extends ControllerBase {
   /**
    * Validates that target is linked on source.
    *
-   * @param $source
-   * @param $target
+   * @param string $source
+   *   The source of the pingback.
+   * @param string $target
+   *   The target of the pingback.
    *
    * @return bool
+   *   TRUE when the source is valid, FALSE otherwise.
    */
   protected function validateSource($source, $target) {
     $valid = FALSE;

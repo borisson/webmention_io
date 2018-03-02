@@ -211,7 +211,6 @@ class WebmentionEntity extends ContentEntityBase implements WebmentionEntityInte
       $weight++;
     }
 
-
     $fields['status'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Publishing status'))
       ->setDescription(t('A boolean indicating whether the Webmention is published.'))
